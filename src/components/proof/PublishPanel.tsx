@@ -133,7 +133,16 @@ export function PublishPanel({
                 linkColor="emerald"
               />
             )}
-            {result.attestationId && (
+            {/* BAS direct off-chain attestation fields */}
+            {result.basAttestation && (
+              <>
+                <ResultRow label="Attestation UID" value={result.basAttestation.uid} />
+                <ResultRow label="Schema UID"      value={result.basAttestation.schemaUID} />
+                <ResultRow label="Signed by"       value={result.basAttestation.signerAddress} />
+              </>
+            )}
+            {/* relay attestation ID (no basAttestation object) */}
+            {result.attestationId && !result.basAttestation && (
               <ResultRow label="Attestation" value={result.attestationId} />
             )}
             {result.dryRunNote && (
@@ -186,11 +195,11 @@ function StatusBadge({ mode }: { mode: Mode }) {
       </span>
     );
   }
-  if (mode === "bas-direct-placeholder") {
+  if (mode === "bas-direct") {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs font-mono text-amber-400">
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-        BAS PENDING
+      <span className="inline-flex items-center gap-1.5 text-xs font-mono text-emerald-400">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+        ATTESTED
       </span>
     );
   }

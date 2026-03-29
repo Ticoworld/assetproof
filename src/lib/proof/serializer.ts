@@ -55,7 +55,7 @@ export interface ProofPayload {
 export interface PublishResult {
   success: boolean;
   /** The mode that was actually used (may differ from requested if fallback occurred). */
-  mode: "dry-run" | "relay" | "bas-direct-placeholder";
+  mode: "dry-run" | "relay" | "bas-direct";
   /** SHA-256 digest of the canonical payload JSON. Format: "sha256:<hex>" */
   payloadHash: string;
   /** The exact payload that was (or would be) published. */
@@ -73,6 +73,22 @@ export interface PublishResult {
     chainId: number;
     reachable: boolean;
     explorerUrl: string;
+  };
+  /**
+   * Off-chain BAS attestation result, present only when mode is bas-direct.
+   * The attestation is verifiable using signerAddress + signature without any chain call.
+   */
+  basAttestation?: {
+    /** keccak256 UID of the off-chain attestation. */
+    uid: string;
+    /** UID of the BAS schema used to encode the payload. */
+    schemaUID: string;
+    /** Ethereum address the attestation was signed with. */
+    signerAddress: string;
+    /** 65-byte compact EIP-712 signature as 0x-prefixed hex. */
+    signature: string;
+    /** Unix timestamp of attestation creation. */
+    time: number;
   };
   /** Present when mode is dry-run — explains what to configure for live publish. */
   dryRunNote?: string;

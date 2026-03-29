@@ -11,32 +11,22 @@
  *               result without any network publish. Always works, no config needed.
  *               Includes a BSC testnet liveness check for demo context.
  *
- *   bsc-testnet — POSTs the serialized proof to a configured relay endpoint
+ *   relay       — POSTs the serialized proof to a configured relay endpoint
  *               (PROOF_PUBLISHER_ENDPOINT). The relay is responsible for
  *               submitting to BSC testnet or BAS. Returns txHash / attestationId
- *               from the relay response. Falls back to dry-run if no endpoint
- *               is configured.
+ *               from the relay response.
  *
- * Required env vars for bsc-testnet mode:
+ *   bas-direct  — Off-chain BAS attestation via EAS SDK.
+ *               Signs an EIP-712 attestation locally using BAS_PRIVATE_KEY.
+ *               No gas, no blockchain transaction.
+ *               Returns a signed attestation with UID and signer address.
+ *               Requires: BAS_SCHEMA_UID + BAS_PRIVATE_KEY.
  *
- *   PROOF_PUBLISHER_NETWORK=bsc-testnet
- *   PROOF_PUBLISHER_ENDPOINT=https://your-relay.example.com/attest
- *
- * Optional:
- *   PROOF_PUBLISHER_API_KEY=<bearer token for the relay>
- *
- * Relay contract:
- *   POST to PROOF_PUBLISHER_ENDPOINT with body:
- *     { network, chainId, payloadHash, payload, serializedAt }
- *   Expected response (any extra fields are ignored):
- *     { txHash?, tx_hash?, attestationId?, attestation_id?, explorerUrl?, explorer_url? }
- *
- * This design lets BAS, a custom proof registry, or any attestation relay slot in
- * without changing the product model — only the endpoint URL needs to change.
- *
- * bas-direct-placeholder — Slot reserved for BAS SDK direct integration.
- * Not yet active. Returns a hashed result with a note. Set PROOF_PUBLISHER_NETWORK=bas-direct
- * to activate. Falls back to relay if an endpoint is also configured, else dry-run.
+ * Mode selection:
+ *   PROOF_PUBLISHER_NETWORK=bas-direct + BAS_SCHEMA_UID + BAS_PRIVATE_KEY → bas-direct
+ *   PROOF_PUBLISHER_NETWORK=relay + PROOF_PUBLISHER_ENDPOINT             → relay
+ *   PROOF_PUBLISHER_NETWORK=bsc-testnet (legacy alias for relay)          → relay
+ *   <anything else or incomplete config>                                   → dry-run
  */
 
 import { createHash } from "node:crypto";
@@ -44,8 +34,9 @@ import type { ProofRecord } from "./model";
 import type { PublishResult } from "./serializer";
 import { serializeProofRecord } from "./serializer";
 import { BSC_TESTNET } from "./chains";
+import { resolveBasConfig, createBasOffchainAttestation } from "./bas";
 
-export type PublishMode = "dry-run" | "relay" | "bas-direct-placeholder";
+export type PublishMode = "dry-run" | "relay" | "bas-direct";
 
 export interface PublishConfig {
   mode: PublishMode;
@@ -58,9 +49,9 @@ export interface PublishConfig {
  * Falls back to dry-run if required env vars are absent or incomplete.
  *
  * PROOF_PUBLISHER_NETWORK values:
+ *   bas-direct     — BAS off-chain attestation (requires BAS_SCHEMA_UID + BAS_PRIVATE_KEY)
  *   relay          — POST to PROOF_PUBLISHER_ENDPOINT (requires endpoint to be set)
  *   bsc-testnet    — legacy alias for relay, accepted for backward compatibility
- *   bas-direct     — BAS SDK slot (placeholder; not yet active)
  *   <anything else or absent> — dry-run
  */
 export function resolvePublishConfig(): PublishConfig {
@@ -68,16 +59,16 @@ export function resolvePublishConfig(): PublishConfig {
   const endpoint = process.env.PROOF_PUBLISHER_ENDPOINT?.trim() || undefined;
   const apiKey = process.env.PROOF_PUBLISHER_API_KEY?.trim() || undefined;
 
+  // bas-direct mode: requires BAS_SCHEMA_UID + BAS_PRIVATE_KEY
+  if (networkEnv === "bas-direct") {
+    const basConfig = resolveBasConfig();
+    if (basConfig) return { mode: "bas-direct" };
+    // Config incomplete — fall through to relay or dry-run
+  }
+
   // relay mode: accept both current name and legacy alias
   if ((networkEnv === "relay" || networkEnv === "bsc-testnet") && endpoint) {
     return { mode: "relay", endpoint, apiKey };
-  }
-
-  // BAS direct — placeholder; not yet active
-  if (networkEnv === "bas-direct") {
-    // If a relay endpoint is also provided, use relay as the active path
-    if (endpoint) return { mode: "relay", endpoint, apiKey };
-    return { mode: "bas-direct-placeholder" };
   }
 
   return { mode: "dry-run" };
@@ -109,23 +100,50 @@ export async function publishProofRecord(record: ProofRecord): Promise<PublishRe
       publishedAt,
       chainStatus,
       dryRunNote:
-        "Set PROOF_PUBLISHER_NETWORK=relay and PROOF_PUBLISHER_ENDPOINT to publish via relay, or configure BAS direct once available.",
+        "No publish config active. Set PROOF_PUBLISHER_NETWORK=bas-direct with BAS_SCHEMA_UID + BAS_PRIVATE_KEY for off-chain attestation, or PROOF_PUBLISHER_NETWORK=relay with PROOF_PUBLISHER_ENDPOINT to publish via relay.",
     };
   }
 
-  // bas-direct-placeholder — reserved slot, not yet active
-  if (config.mode === "bas-direct-placeholder") {
-    return {
-      success: true,
-      mode: "bas-direct-placeholder",
-      payloadHash,
-      payload,
-      publishedAt,
-      chainStatus,
-      dryRunNote:
-        "BAS direct publish is not yet active. Payload has been hashed and validated. " +
-        "Configure PROOF_PUBLISHER_ENDPOINT to publish via relay, or wait for BAS SDK integration.",
-    };
+  // bas-direct — real BAS off-chain attestation via EAS SDK
+  if (config.mode === "bas-direct") {
+    const basConfig = resolveBasConfig();
+    if (!basConfig) {
+      // Should not happen (resolvePublishConfig already checked), but guard anyway.
+      return {
+        success: false,
+        mode: "bas-direct",
+        payloadHash,
+        payload,
+        publishedAt,
+        chainStatus,
+        error: "BAS config missing. Set BAS_SCHEMA_UID and BAS_PRIVATE_KEY.",
+      };
+    }
+    try {
+      const attestation = await createBasOffchainAttestation(payload, payloadHash, basConfig);
+      return {
+        success: true,
+        mode: "bas-direct",
+        payloadHash,
+        payload,
+        attestationId: attestation.uid,
+        publishedAt,
+        chainStatus,
+        basAttestation: attestation,
+      };
+    } catch (err) {
+      // Surface a clean error without leaking the private key.
+      const message = err instanceof Error ? err.message : "BAS attestation failed.";
+      return {
+        success: false,
+        mode: "bas-direct",
+        payloadHash,
+        payload,
+        publishedAt,
+        chainStatus,
+        error: message.includes("private key") ? "Invalid BAS_PRIVATE_KEY." : message,
+      };
+    }
   }
 
   // relay — POST the serialized payload to the configured endpoint
