@@ -1,7 +1,7 @@
-import type { MockAttestation, AttestationStatus } from "@/lib/mock/assets";
+import type { ProofSignal, ProofStatus } from "@/lib/proof/model";
 
 const STATUS_CONFIG: Record<
-  AttestationStatus,
+  ProofStatus,
   { label: string; dotClass: string; textClass: string; borderClass: string; bgClass: string }
 > = {
   verified: {
@@ -35,19 +35,19 @@ const STATUS_CONFIG: Record<
 };
 
 interface Props {
-  attestation: MockAttestation;
+  signal: ProofSignal;
 }
 
-export function AttestationStatusCard({ attestation }: Props) {
-  const config = STATUS_CONFIG[attestation.status];
+export function AttestationStatusCard({ signal }: Props) {
+  const config = STATUS_CONFIG[signal.status];
 
   return (
     <div
       className={`rounded-xl border p-4 space-y-3 ${config.borderClass} ${config.bgClass}`}
     >
-      {/* Type + status dot */}
+      {/* Label + status dot */}
       <div className="flex items-start justify-between gap-2">
-        <p className="text-zinc-200 font-medium text-sm leading-snug">{attestation.type}</p>
+        <p className="text-zinc-200 font-medium text-sm leading-snug">{signal.label}</p>
         <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
           <span className={`w-1.5 h-1.5 rounded-full ${config.dotClass}`} />
           <span className={`text-xs font-mono ${config.textClass}`}>{config.label}</span>
@@ -56,22 +56,22 @@ export function AttestationStatusCard({ attestation }: Props) {
 
       {/* Attester */}
       <div>
-        <p className="text-zinc-400 text-xs">{attestation.attester}</p>
+        <p className="text-zinc-400 text-xs">{signal.attester}</p>
       </div>
 
       {/* Dates */}
       <div className="flex gap-4 text-xs">
-        {attestation.attestedAt && (
+        {signal.issuedAt && (
           <div className="space-y-0.5">
             <p className="text-zinc-500 text-[10px]">Issued</p>
-            <p className="text-zinc-400 font-mono">{attestation.attestedAt}</p>
+            <p className="text-zinc-400 font-mono">{signal.issuedAt}</p>
           </div>
         )}
-        {attestation.expiresAt && (
+        {signal.expiresAt && (
           <div className="space-y-0.5">
             <p className="text-zinc-500 text-[10px]">Expires</p>
-            <p className={`font-mono ${attestation.status !== "verified" ? config.textClass : "text-zinc-400"}`}>
-              {attestation.expiresAt}
+            <p className={`font-mono ${signal.status !== "verified" ? config.textClass : "text-zinc-400"}`}>
+              {signal.expiresAt}
             </p>
           </div>
         )}

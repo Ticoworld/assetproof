@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getMockAsset } from "@/lib/mock/assets";
+import { getProofRecord } from "@/lib/proof/scenarios";
 import { AssetOverviewCard } from "@/components/proof/AssetOverviewCard";
 import { AttestationStatusCard } from "@/components/proof/AttestationStatusCard";
 import { DisclosureTable } from "@/components/proof/DisclosureTable";
@@ -12,9 +12,9 @@ interface Props {
 
 export default async function ProofPage({ params }: Props) {
   const { assetId } = await params;
-  const asset = getMockAsset(assetId);
+  const record = getProofRecord(assetId);
 
-  if (!asset) {
+  if (!record) {
     notFound();
   }
 
@@ -28,40 +28,40 @@ export default async function ProofPage({ params }: Props) {
 
         {/* Page heading */}
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold text-zinc-100">{asset.name}</h1>
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-zinc-800 border border-zinc-700 text-zinc-300 font-mono text-xs">{asset.symbol}</span>
+          <h1 className="text-xl font-bold text-zinc-100">{record.assetName}</h1>
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-zinc-800 border border-zinc-700 text-zinc-300 font-mono text-xs">{record.symbol}</span>
         </div>
 
         {/* Trust summary - full width banner */}
-        <TrustSummaryPanel asset={asset} />
+        <TrustSummaryPanel record={record} />
 
-        {/* Two-column: overview + attestations */}
+        {/* Two-column: overview + signals */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Overview card - narrower column */}
           <div className="lg:col-span-2">
-            <AssetOverviewCard asset={asset} />
+            <AssetOverviewCard record={record} />
           </div>
 
-          {/* Attestations grid - wider column */}
+          {/* Signal cards - wider column */}
           <div className="lg:col-span-3 space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-zinc-400 font-mono text-xs uppercase tracking-widest">
-                Status
+                Disclosure signals
               </h2>
               <span className="text-zinc-600 font-mono text-xs">
-                {asset.attestations.length} signals
+                {record.signals.length} signals
               </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {asset.attestations.map((att) => (
-                <AttestationStatusCard key={att.id} attestation={att} />
+              {record.signals.map((signal) => (
+                <AttestationStatusCard key={signal.key} signal={signal} />
               ))}
             </div>
           </div>
         </div>
 
         {/* Disclosure documents - full width */}
-        <DisclosureTable disclosures={asset.disclosures} />
+        <DisclosureTable documents={record.documents} />
       </div>
     </div>
   );
@@ -69,10 +69,10 @@ export default async function ProofPage({ params }: Props) {
 
 export async function generateMetadata({ params }: Props) {
   const { assetId } = await params;
-  const asset = getMockAsset(assetId);
-  if (!asset) return { title: "Asset Not Found | AssetProof" };
+  const record = getProofRecord(assetId);
+  if (!record) return { title: "Asset Not Found | AssetProof" };
   return {
-    title: `${asset.name} (${asset.symbol}) | AssetProof`,
-    description: `Attestation and disclosure proof for ${asset.name} on BNB Chain.`,
+    title: `${record.assetName} (${record.symbol}) | AssetProof`,
+    description: `Disclosure freshness and trust status for ${record.assetName} on BNB Chain.`,
   };
 }

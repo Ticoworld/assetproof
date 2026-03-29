@@ -1,4 +1,4 @@
-import type { MockAsset } from "@/lib/mock/assets";
+import type { ProofRecord } from "@/lib/proof/model";
 
 const CATEGORY_LABELS: Record<string, string> = {
   "real-estate": "Real Estate",
@@ -22,14 +22,14 @@ function formatSupply(value: number): string {
 }
 
 interface Props {
-  asset: MockAsset;
+  record: ProofRecord;
 }
 
-export function AssetOverviewCard({ asset }: Props) {
+export function AssetOverviewCard({ record }: Props) {
   const statusColor =
-    asset.status === "active"
+    record.assetStatus === "active"
       ? "text-emerald-400"
-      : asset.status === "pending"
+      : record.assetStatus === "pending"
       ? "text-amber-400"
       : "text-rose-400";
 
@@ -39,30 +39,30 @@ export function AssetOverviewCard({ asset }: Props) {
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold text-zinc-100">{asset.name}</h2>
+            <h2 className="text-lg font-semibold text-zinc-100">{record.assetName}</h2>
             <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-zinc-800 border border-zinc-700 text-zinc-300 font-mono text-xs">
-              {asset.symbol}
+              {record.symbol}
             </span>
           </div>
           <p className="text-zinc-500 text-xs font-mono">
-            {asset.address.slice(0, 10)}&hellip;{asset.address.slice(-8)}
+            {record.walletAddress.slice(0, 10)}&hellip;{record.walletAddress.slice(-8)}
           </p>
         </div>
         <span className={`text-xs font-mono uppercase tracking-widest ${statusColor}`}>
-          {asset.status}
+          {record.assetStatus}
         </span>
       </div>
 
       {/* Grid of details */}
       <div className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm">
-        <Field label="Category" value={CATEGORY_LABELS[asset.category] ?? asset.category} />
-        <Field label="Jurisdiction" value={asset.jurisdiction} />
-        <Field label="Issuer" value={asset.issuer} />
-        <Field label="Custody Provider" value={asset.custodyProvider} />
-        <Field label="Total Value (USD)" value={formatUsd(asset.totalValueUsd)} highlight />
-        <Field label="Token Supply" value={formatSupply(asset.tokenSupply)} />
-        <Field label="Registered" value={asset.createdAt} />
-        <Field label="Last Updated" value={asset.lastUpdated} />
+        <Field label="Category" value={CATEGORY_LABELS[record.category] ?? record.category} />
+        <Field label="Jurisdiction" value={record.jurisdiction} />
+        <Field label="Issuer" value={record.issuer} />
+        <Field label="Custody Provider" value={record.custodyProvider} />
+        <Field label="Total Value (USD)" value={formatUsd(record.totalValueUsd)} highlight />
+        <Field label="Token Supply" value={formatSupply(record.tokenSupply)} />
+        <Field label="Registered" value={record.createdAt} />
+        <Field label="As Of" value={record.asOf} />
       </div>
     </div>
   );

@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ASSET_CATEGORIES } from "@/lib/mock/assets";
+import { ASSET_CATEGORIES } from "@/lib/proof/model";
 import {
-  buildDraftAsset,
+  buildDraftProof,
   saveDraft,
   type IssuerFormData,
   type ProofInput,
@@ -128,7 +128,7 @@ export default function IssuerNewPage() {
     ]));
     if (Object.keys(errs).length > 0) return;
     setSubmitting(true);
-    const draft = buildDraftAsset(form);
+    const draft = buildDraftProof(form);
     saveDraft(draft);
     router.push("/proof/preview");
   };

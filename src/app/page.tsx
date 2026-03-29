@@ -29,7 +29,7 @@ export default function Home() {
           </p>
           <div className="flex items-center gap-4">
             <Link
-              href="/proof/demo-asset"
+              href="/proof/at-risk"
               className="px-5 py-2.5 bg-zinc-100 hover:bg-white text-zinc-900 rounded-lg font-semibold text-sm transition-colors"
             >
               View demo proof
@@ -40,6 +40,12 @@ export default function Home() {
             >
               Register an asset
             </Link>
+          </div>
+          <div className="flex items-center gap-3 mt-3">
+            <span className="text-zinc-600 text-xs">Other scenarios:</span>
+            <Link href="/proof/review" className="text-zinc-500 hover:text-zinc-300 text-xs transition-colors">Review</Link>
+            <span className="text-zinc-700 text-xs">&bull;</span>
+            <Link href="/proof/healthy" className="text-zinc-500 hover:text-zinc-300 text-xs transition-colors">Healthy</Link>
           </div>
         </div>
 

@@ -1,7 +1,7 @@
-import type { MockAsset, AssetVerdict } from "@/lib/mock/assets";
+import type { ProofRecord, TrustState } from "@/lib/proof/model";
 
 const VERDICT_CONFIG: Record<
-  AssetVerdict,
+  TrustState,
   { label: string; description: string; className: string }
 > = {
   Healthy: {
@@ -11,26 +11,23 @@ const VERDICT_CONFIG: Record<
   },
   Review: {
     label: "REVIEW",
-    description: "Some disclosures are expiring soon.",
+    description: "One or more disclosures are expiring soon.",
     className: "text-amber-400 border-amber-800 bg-amber-950/50",
   },
   "At Risk": {
     label: "AT RISK",
-    description: "Key disclosures missing or overdue.",
+    description: "Key disclosures are missing or overdue.",
     className: "text-rose-400 border-rose-800 bg-rose-950/50",
   },
 };
 
 interface Props {
-  asset: Pick<MockAsset, "verdict" | "attestations" | "lastUpdated">;
+  record: Pick<ProofRecord, "summary" | "asOf">;
 }
 
-export function TrustSummaryPanel({ asset }: Props) {
-  const config = VERDICT_CONFIG[asset.verdict];
-  const verified = asset.attestations.filter((a) => a.status === "verified").length;
-  const expiring = asset.attestations.filter((a) => a.status === "expiring").length;
-  const stale = asset.attestations.filter((a) => a.status === "stale").length;
-  const missing = asset.attestations.filter((a) => a.status === "missing").length;
+export function TrustSummaryPanel({ record }: Props) {
+  const config = VERDICT_CONFIG[record.summary.trust];
+  const { verifiedCount, expiringCount, staleCount, missingCount } = record.summary;
 
   return (
     <div className={`rounded-xl border p-6 ${config.className}`}>
@@ -43,17 +40,17 @@ export function TrustSummaryPanel({ asset }: Props) {
           <p className="text-sm opacity-80">{config.description}</p>
         </div>
 
-        {/* Attestation count summary */}
+        {/* Pre-computed signal counts from summary */}
         <div className="shrink-0 flex gap-5 text-center text-sm font-mono">
-          <CountPill value={verified} label="Verified" className="text-emerald-400" />
-          <CountPill value={expiring} label="Expiring" className="text-amber-400" />
-          <CountPill value={stale} label="Stale" className="text-orange-400" />
-          <CountPill value={missing} label="Missing" className="text-rose-400" />
+          <CountPill value={verifiedCount} label="Verified" className="text-emerald-400" />
+          <CountPill value={expiringCount} label="Expiring" className="text-amber-400" />
+          <CountPill value={staleCount} label="Stale" className="text-orange-400" />
+          <CountPill value={missingCount} label="Missing" className="text-rose-400" />
         </div>
       </div>
 
       <p className="mt-4 text-xs font-mono opacity-40">
-        Updated {asset.lastUpdated}
+        As of {record.asOf}
       </p>
     </div>
   );

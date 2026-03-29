@@ -1,6 +1,6 @@
-import type { MockDisclosure, AttestationStatus } from "@/lib/mock/assets";
+import type { ProofDocument, ProofStatus, SignalKey } from "@/lib/proof/model";
 
-const DOC_TYPE_LABELS: Record<string, string> = {
+const SIGNAL_LABELS: Record<SignalKey, string> = {
   custody: "Custody",
   valuation: "Valuation",
   legal: "Legal",
@@ -8,7 +8,7 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 };
 
 const STATUS_CONFIG: Record<
-  AttestationStatus,
+  ProofStatus,
   { label: string; className: string }
 > = {
   verified: { label: "Verified", className: "text-emerald-400 bg-emerald-950/50 border-emerald-900" },
@@ -18,10 +18,10 @@ const STATUS_CONFIG: Record<
 };
 
 interface Props {
-  disclosures: MockDisclosure[];
+  documents: ProofDocument[];
 }
 
-export function DisclosureTable({ disclosures }: Props) {
+export function DisclosureTable({ documents }: Props) {
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
       <div className="px-6 py-4 border-b border-zinc-800">
@@ -32,14 +32,14 @@ export function DisclosureTable({ disclosures }: Props) {
         <thead>
           <tr className="border-b border-zinc-800">
             <th className="text-left px-6 py-3 text-zinc-500 text-xs">Document</th>
-            <th className="text-left px-4 py-3 text-zinc-500 text-xs">Type</th>
+            <th className="text-left px-4 py-3 text-zinc-500 text-xs">Signal</th>
             <th className="text-left px-4 py-3 text-zinc-500 text-xs">Published</th>
             <th className="text-left px-4 py-3 text-zinc-500 text-xs">Status</th>
             <th className="text-right px-6 py-3 text-zinc-500 text-xs">Link</th>
           </tr>
         </thead>
         <tbody>
-          {disclosures.map((doc, i) => {
+          {documents.map((doc, i) => {
             const statusCfg = STATUS_CONFIG[doc.status];
             return (
               <tr
@@ -49,7 +49,7 @@ export function DisclosureTable({ disclosures }: Props) {
                 <td className="px-6 py-3 text-zinc-200">{doc.title}</td>
                 <td className="px-4 py-3">
                   <span className="text-zinc-500 font-mono text-xs">
-                    {DOC_TYPE_LABELS[doc.docType] ?? doc.docType}
+                    {SIGNAL_LABELS[doc.signal]}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-zinc-500 font-mono text-xs">
