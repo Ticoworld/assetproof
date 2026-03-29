@@ -3,15 +3,15 @@
  * Used for Phase 2 product shell — no live chain or AI calls.
  */
 
-export type AttestationStatus = "verified" | "stale" | "missing";
-export type DisclosureType = "prospectus" | "audit" | "valuation" | "legal" | "custody";
+export type AttestationStatus = "verified" | "expiring" | "stale" | "missing";
+export type DisclosureType = "custody" | "valuation" | "legal" | "regulatory";
 export type AssetCategory =
   | "real-estate"
   | "commodities"
   | "treasury"
   | "private-credit"
   | "infrastructure";
-export type AssetVerdict = "Pass" | "Review" | "Fail";
+export type AssetVerdict = "Healthy" | "Review" | "At Risk";
 
 export interface MockAttestation {
   id: string;
@@ -45,7 +45,6 @@ export interface MockAsset {
   tokenSupply: number;
   description: string;
   status: "active" | "suspended" | "pending";
-  trustScore: number;
   verdict: AssetVerdict;
   createdAt: string;
   lastUpdated: string;
@@ -68,104 +67,79 @@ export const MOCK_ASSETS: Record<string, MockAsset> = {
     description:
       "Tokenized fractional ownership in a Grade-A commercial office building in Singapore's Central Business District. Regulated under MAS Guidelines on Digital Token Offerings.",
     status: "active",
-    trustScore: 82,
-    verdict: "Pass",
+    verdict: "At Risk",
     createdAt: "2025-11-01",
-    lastUpdated: "2026-01-15",
+    lastUpdated: "2026-03-29",
     attestations: [
       {
-        id: "att-kyc",
-        type: "KYC / AML Compliance",
-        attester: "Sumsub Verification Services",
-        attestedAt: "2025-11-05",
-        expiresAt: "2026-11-05",
-        status: "verified",
+        id: "att-custody",
+        type: "Custody",
+        attester: "Standard Chartered Custody Services",
+        attestedAt: "2026-01-01",
+        expiresAt: "2026-04-01",
+        status: "expiring",
         schemaId: "0x0001",
       },
       {
-        id: "att-custody",
-        type: "Custody Verification",
-        attester: "Standard Chartered Custody Services",
-        attestedAt: "2025-12-01",
-        expiresAt: "2026-03-01",
-        status: "stale",
+        id: "att-valuation",
+        type: "Valuation",
+        attester: "Jones Lang LaSalle (JLL)",
+        attestedAt: "",
+        expiresAt: "",
+        status: "missing",
         schemaId: "0x0002",
       },
       {
-        id: "att-valuation",
-        type: "Asset Valuation",
-        attester: "Jones Lang LaSalle (JLL)",
-        attestedAt: "2025-06-15",
-        expiresAt: "2025-12-15",
-        status: "missing",
+        id: "att-legal",
+        type: "Legal",
+        attester: "Allen & Gledhill LLP",
+        attestedAt: "2025-11-10",
+        expiresAt: "2026-11-10",
+        status: "verified",
         schemaId: "0x0003",
       },
       {
-        id: "att-legal",
-        type: "Legal & Regulatory",
-        attester: "Allen & Gledhill LLP",
-        attestedAt: "2025-11-10",
+        id: "att-regulatory",
+        type: "Regulatory filing",
+        attester: "MAS Singapore",
+        attestedAt: "2025-11-01",
+        expiresAt: "2026-11-01",
         status: "verified",
         schemaId: "0x0004",
-      },
-      {
-        id: "att-audit",
-        type: "Smart Contract Audit",
-        attester: "CertiK Security",
-        attestedAt: "2025-10-20",
-        status: "verified",
-        schemaId: "0x0005",
-      },
-      {
-        id: "att-insurance",
-        type: "Insurance Coverage",
-        attester: "AXA Corporate Solutions",
-        attestedAt: "2025-11-15",
-        expiresAt: "2026-11-15",
-        status: "verified",
-        schemaId: "0x0006",
       },
     ],
     disclosures: [
       {
-        id: "disc-prospectus",
-        title: "Offering Memorandum",
-        docType: "prospectus",
-        url: "https://example.com/sgot-offering-memorandum.pdf",
-        publishedAt: "2025-10-20",
-        status: "verified",
-      },
-      {
-        id: "disc-audit",
-        title: "Annual Financial Audit FY2025",
-        docType: "audit",
-        url: "https://example.com/sgot-audit-fy2025.pdf",
-        publishedAt: "2025-12-15",
-        status: "verified",
+        id: "disc-custody",
+        title: "Custody Statement Q1 2026",
+        docType: "custody",
+        url: "https://example.com/sgot-custody-statement-q1-2026.pdf",
+        publishedAt: "2026-01-01",
+        status: "expiring",
       },
       {
         id: "disc-valuation",
-        title: "Property Valuation Report Q2 2025",
+        title: "Valuation Report",
         docType: "valuation",
-        url: "https://example.com/sgot-valuation-q2-2025.pdf",
-        publishedAt: "2025-06-01",
-        status: "stale",
+        url: "",
+        publishedAt: "",
+        status: "missing",
       },
       {
         id: "disc-legal",
-        title: "MAS Regulatory Filing",
+        title: "MAS Legal Filing",
         docType: "legal",
         url: "https://example.com/sgot-mas-filing.pdf",
         publishedAt: "2025-11-12",
         status: "verified",
       },
       {
-        id: "disc-custody",
-        title: "Custody Disclosure Statement",
-        docType: "custody",
-        url: "",
-        publishedAt: "",
-        status: "missing",
+        id: "disc-regulatory",
+        title: "MAS Capital Markets Registration",
+        docType: "regulatory",
+        url: "https://example.com/sgot-mas-registration.pdf",
+        publishedAt: "2025-11-01",
+        status: "verified",
       },
     ],
   },

@@ -44,15 +44,14 @@ export function AssetOverviewCard({ asset }: Props) {
               {asset.symbol}
             </span>
           </div>
-          <p className="text-zinc-500 text-sm font-mono">{asset.address}</p>
+          <p className="text-zinc-500 text-xs font-mono">
+            {asset.address.slice(0, 10)}&hellip;{asset.address.slice(-8)}
+          </p>
         </div>
         <span className={`text-xs font-mono uppercase tracking-widest ${statusColor}`}>
           {asset.status}
         </span>
       </div>
-
-      {/* Description */}
-      <p className="text-zinc-400 text-sm leading-relaxed">{asset.description}</p>
 
       {/* Grid of details */}
       <div className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm">
@@ -80,7 +79,7 @@ function Field({
 }) {
   return (
     <div className="space-y-0.5">
-      <p className="text-zinc-600 font-mono text-xs uppercase tracking-widest">{label}</p>
+      <p className="text-zinc-400 text-xs">{label}</p>
       <p className={highlight ? "text-emerald-400 font-semibold" : "text-zinc-200"}>{value}</p>
     </div>
   );

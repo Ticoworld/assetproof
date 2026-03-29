@@ -79,7 +79,7 @@ export function TruthConsole() {
           disabled={!address.trim() || status === "loading"}
           className="px-4 py-2 bg-zinc-800 border border-zinc-700 rounded text-zinc-300 font-mono text-sm hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
-          {status === "loading" ? "..." : "Scan"}
+          {status === "loading" ? "..." : "Verify"}
         </button>
       </div>
 

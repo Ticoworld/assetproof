@@ -2,94 +2,66 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#09090b] flex flex-col items-center justify-center px-4 py-16">
-      {/* Logo + Tagline */}
-      <div className="text-center space-y-3 mb-12">
-        <h1 className="text-3xl font-mono font-black text-zinc-100 tracking-tight">
-          ASSETPROOF
-        </h1>
-        <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest">
-          RWA Attestation &amp; Disclosure Monitor on BNB Chain
-        </p>
-      </div>
-
-      {/* Action cards */}
-      <div className="w-full max-w-lg grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Link
-          href="/proof/demo-asset"
-          className="group bg-zinc-900 border border-zinc-800 hover:border-emerald-800 rounded-xl p-6 space-y-3 transition-colors"
-        >
-          <div className="w-9 h-9 rounded-lg bg-emerald-950 border border-emerald-900 flex items-center justify-center">
-            <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <h2 className="text-zinc-200 font-semibold text-sm group-hover:text-emerald-400 transition-colors">
-              Verify Asset
-            </h2>
-            <p className="text-zinc-600 text-xs mt-0.5">
-              View attestation and disclosure proof for a registered RWA.
-            </p>
-          </div>
-          <span className="text-emerald-600 group-hover:text-emerald-400 font-mono text-xs transition-colors">
-            View Demo &rarr;
-          </span>
-        </Link>
-
+    <div className="min-h-screen bg-[#09090b]">
+      {/* Top nav */}
+      <header className="border-b border-zinc-900 px-8 py-4 flex items-center justify-between">
+        <span className="font-mono font-bold text-zinc-200 tracking-tight text-sm">ASSETPROOF</span>
         <Link
           href="/issuer/new"
-          className="group bg-zinc-900 border border-zinc-800 hover:border-zinc-600 rounded-xl p-6 space-y-3 transition-colors"
+          className="text-zinc-400 hover:text-zinc-200 text-sm transition-colors"
         >
-          <div className="w-9 h-9 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center">
-            <svg className="w-5 h-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-          </div>
-          <div>
-            <h2 className="text-zinc-200 font-semibold text-sm group-hover:text-zinc-100 transition-colors">
-              Register Asset
-            </h2>
-            <p className="text-zinc-600 text-xs mt-0.5">
-              Submit your tokenized RWA for on-chain attestation and disclosure monitoring.
-            </p>
-          </div>
-          <span className="text-zinc-600 group-hover:text-zinc-400 font-mono text-xs transition-colors">
-            Issuer Portal &rarr;
-          </span>
+          New asset &rarr;
         </Link>
-      </div>
+      </header>
 
-      {/* What we verify */}
-      <div className="mt-12 w-full max-w-lg">
-        <p className="text-zinc-700 font-mono text-[10px] uppercase tracking-widest text-center mb-4">
-          What we monitor
-        </p>
-        <div className="grid grid-cols-3 gap-3 text-center">
-          {[
-            "KYC / AML",
-            "Asset Valuation",
-            "Custody",
-            "Legal Compliance",
-            "Smart Contract Audit",
-            "Insurance Coverage",
-          ].map((item) => (
-            <div
-              key={item}
-              className="bg-zinc-900/50 border border-zinc-800 rounded-lg py-2 px-3"
+      {/* Hero */}
+      <main className="max-w-5xl mx-auto px-8 pt-24 pb-16">
+        <div className="max-w-2xl">
+          <p className="text-zinc-500 font-mono text-xs uppercase tracking-widest mb-4">
+            BNB Chain &bull; Real-World Assets
+          </p>
+          <h1 className="text-4xl font-bold text-zinc-100 leading-tight mb-6">
+            Track disclosure freshness<br />for tokenized assets.
+          </h1>
+          <p className="text-zinc-400 text-base leading-relaxed mb-10 max-w-lg">
+            AssetProof checks whether custody, valuation, and legal documents
+            are verified, expiring, or missing for RWA issuances on BNB Chain.
+          </p>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/proof/demo-asset"
+              className="px-5 py-2.5 bg-zinc-100 hover:bg-white text-zinc-900 rounded-lg font-semibold text-sm transition-colors"
             >
-              <p className="text-zinc-500 text-[10px] font-mono">{item}</p>
-            </div>
-          ))}
+              View demo proof
+            </Link>
+            <Link
+              href="/issuer/new"
+              className="px-5 py-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 rounded-lg font-semibold text-sm transition-colors"
+            >
+              Register an asset
+            </Link>
+          </div>
         </div>
-      </div>
 
-      {/* Footer */}
-      <div className="mt-16 text-center">
-        <p className="text-zinc-800 text-[10px] font-mono">
-          Powered by BNB Chain Attestation Service &bull; Gemini AI &bull; Phase 2
-        </p>
-      </div>
-    </main>
+        {/* What's tracked */}
+        <div className="mt-24 border-t border-zinc-900 pt-12">
+          <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest mb-6">Disclosure signals</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-3">
+            {[
+              "Custody status",
+              "Valuation freshness",
+              "Legal filings",
+              "Document completeness",
+              "Trust status",
+            ].map((item) => (
+              <div key={item} className="flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0" />
+                <span className="text-zinc-400 text-sm">{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
+    </div>
   );
 }

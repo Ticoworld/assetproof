@@ -19,35 +19,17 @@ export default async function ProofPage({ params }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-[#09090b] px-4 py-8">
-      <div className="max-w-5xl mx-auto space-y-6">
-        {/* Nav */}
-        <div className="flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-zinc-600 hover:text-zinc-400 font-mono text-xs uppercase tracking-widest transition-colors"
-          >
-            &larr; AssetProof
-          </Link>
-          <div className="flex items-center gap-4 text-xs font-mono">
-            <span className="text-zinc-700">Proof ID: {asset.id}</span>
-            <Link
-              href="/issuer/new"
-              className="text-zinc-600 hover:text-zinc-400 transition-colors underline underline-offset-2"
-            >
-              Register Asset
-            </Link>
-          </div>
-        </div>
+    <div className="min-h-screen bg-[#09090b]">
+      <header className="border-b border-zinc-900 px-8 py-4 flex items-center justify-between">
+        <Link href="/" className="font-mono font-bold text-zinc-200 tracking-tight text-sm">ASSETPROOF</Link>
+        <Link href="/issuer/new" className="text-zinc-600 hover:text-zinc-400 text-xs transition-colors">New asset &rarr;</Link>
+      </header>
+      <div className="max-w-5xl mx-auto px-8 py-10 space-y-6">
 
         {/* Page heading */}
-        <div>
-          <h1 className="text-lg font-semibold text-zinc-100">
-            Asset Proof &mdash; {asset.name}
-          </h1>
-          <p className="text-zinc-600 text-xs font-mono mt-0.5">
-            Public attestation and disclosure record on BNB Chain (mock data)
-          </p>
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-bold text-zinc-100">{asset.name}</h1>
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-zinc-800 border border-zinc-700 text-zinc-300 font-mono text-xs">{asset.symbol}</span>
         </div>
 
         {/* Trust summary - full width banner */}
@@ -64,10 +46,10 @@ export default async function ProofPage({ params }: Props) {
           <div className="lg:col-span-3 space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-zinc-400 font-mono text-xs uppercase tracking-widest">
-                Attestations
+                Status
               </h2>
-              <span className="text-zinc-700 font-mono text-xs">
-                {asset.attestations.length} records
+              <span className="text-zinc-600 font-mono text-xs">
+                {asset.attestations.length} signals
               </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -80,11 +62,6 @@ export default async function ProofPage({ params }: Props) {
 
         {/* Disclosure documents - full width */}
         <DisclosureTable disclosures={asset.disclosures} />
-
-        {/* Footer note */}
-        <p className="text-zinc-800 font-mono text-[10px] text-center pb-4">
-          AssetProof &bull; BNB Chain Attestation Service &bull; Mock Data &bull; Phase 2
-        </p>
       </div>
     </div>
   );

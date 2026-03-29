@@ -29,7 +29,7 @@ function RandomHex() {
   );
 }
 
-export function CryptoLoader({ size = 80, message = "Scanning..." }: CryptoLoaderProps) {
+export function CryptoLoader({ size = 80, message = "Verifying..." }: CryptoLoaderProps) {
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {

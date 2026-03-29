@@ -11,15 +11,22 @@ const STATUS_CONFIG: Record<
     borderClass: "border-emerald-900",
     bgClass: "bg-emerald-950/40",
   },
-  stale: {
-    label: "Expiring Soon",
+  expiring: {
+    label: "Expiring",
     dotClass: "bg-amber-400",
     textClass: "text-amber-400",
     borderClass: "border-amber-900",
     bgClass: "bg-amber-950/40",
   },
+  stale: {
+    label: "Stale",
+    dotClass: "bg-orange-400",
+    textClass: "text-orange-400",
+    borderClass: "border-orange-900",
+    bgClass: "bg-orange-950/40",
+  },
   missing: {
-    label: "Overdue",
+    label: "Missing",
     dotClass: "bg-rose-400",
     textClass: "text-rose-400",
     borderClass: "border-rose-900",
@@ -48,8 +55,7 @@ export function AttestationStatusCard({ attestation }: Props) {
       </div>
 
       {/* Attester */}
-      <div className="space-y-0.5">
-        <p className="text-zinc-600 font-mono text-[10px] uppercase tracking-widest">Attester</p>
+      <div>
         <p className="text-zinc-400 text-xs">{attestation.attester}</p>
       </div>
 
@@ -57,22 +63,19 @@ export function AttestationStatusCard({ attestation }: Props) {
       <div className="flex gap-4 text-xs">
         {attestation.attestedAt && (
           <div className="space-y-0.5">
-            <p className="text-zinc-600 font-mono text-[10px] uppercase tracking-widest">Issued</p>
+            <p className="text-zinc-500 text-[10px]">Issued</p>
             <p className="text-zinc-400 font-mono">{attestation.attestedAt}</p>
           </div>
         )}
         {attestation.expiresAt && (
           <div className="space-y-0.5">
-            <p className="text-zinc-600 font-mono text-[10px] uppercase tracking-widest">Expires</p>
+            <p className="text-zinc-500 text-[10px]">Expires</p>
             <p className={`font-mono ${attestation.status !== "verified" ? config.textClass : "text-zinc-400"}`}>
               {attestation.expiresAt}
             </p>
           </div>
         )}
       </div>
-
-      {/* Schema ID */}
-      <p className="text-zinc-700 font-mono text-[10px]">Schema {attestation.schemaId}</p>
     </div>
   );
 }

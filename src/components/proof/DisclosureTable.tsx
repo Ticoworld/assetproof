@@ -1,11 +1,10 @@
 import type { MockDisclosure, AttestationStatus } from "@/lib/mock/assets";
 
 const DOC_TYPE_LABELS: Record<string, string> = {
-  prospectus: "Prospectus",
-  audit: "Audit",
+  custody: "Custody",
   valuation: "Valuation",
   legal: "Legal",
-  custody: "Custody",
+  regulatory: "Regulatory",
 };
 
 const STATUS_CONFIG: Record<
@@ -13,7 +12,8 @@ const STATUS_CONFIG: Record<
   { label: string; className: string }
 > = {
   verified: { label: "Verified", className: "text-emerald-400 bg-emerald-950/50 border-emerald-900" },
-  stale: { label: "Stale", className: "text-amber-400 bg-amber-950/50 border-amber-900" },
+  expiring: { label: "Expiring", className: "text-amber-400 bg-amber-950/50 border-amber-900" },
+  stale: { label: "Stale", className: "text-orange-400 bg-orange-950/50 border-orange-900" },
   missing: { label: "Missing", className: "text-rose-400 bg-rose-950/50 border-rose-900" },
 };
 
@@ -25,30 +25,17 @@ export function DisclosureTable({ disclosures }: Props) {
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
       <div className="px-6 py-4 border-b border-zinc-800">
-        <h3 className="text-zinc-300 font-semibold text-sm">Disclosure Documents</h3>
-        <p className="text-zinc-600 text-xs font-mono mt-0.5">
-          {disclosures.filter((d) => d.status === "verified").length} of {disclosures.length} verified
-        </p>
+        <h3 className="text-zinc-300 font-semibold text-sm">Disclosure documents</h3>
       </div>
 
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-zinc-800">
-            <th className="text-left px-6 py-3 text-zinc-600 font-mono text-xs uppercase tracking-widest">
-              Document
-            </th>
-            <th className="text-left px-4 py-3 text-zinc-600 font-mono text-xs uppercase tracking-widest">
-              Type
-            </th>
-            <th className="text-left px-4 py-3 text-zinc-600 font-mono text-xs uppercase tracking-widest">
-              Published
-            </th>
-            <th className="text-left px-4 py-3 text-zinc-600 font-mono text-xs uppercase tracking-widest">
-              Status
-            </th>
-            <th className="text-right px-6 py-3 text-zinc-600 font-mono text-xs uppercase tracking-widest">
-              Link
-            </th>
+            <th className="text-left px-6 py-3 text-zinc-500 text-xs">Document</th>
+            <th className="text-left px-4 py-3 text-zinc-500 text-xs">Type</th>
+            <th className="text-left px-4 py-3 text-zinc-500 text-xs">Published</th>
+            <th className="text-left px-4 py-3 text-zinc-500 text-xs">Status</th>
+            <th className="text-right px-6 py-3 text-zinc-500 text-xs">Link</th>
           </tr>
         </thead>
         <tbody>
