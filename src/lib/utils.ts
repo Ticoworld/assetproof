@@ -10,8 +10,8 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Formats a Solana wallet address to a shortened display format.
- * Example: "7xKX...4hEv"
+ * Formats a blockchain address to a shortened display format.
+ * Example: "0xABCD...1234"
  */
 export function formatAddress(address: string, chars: number = 4): string {
   if (!address || address.length < chars * 2) return address;
@@ -41,12 +41,4 @@ export function formatNumber(
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });
-}
-
-/**
- * Formats SOL amount with proper decimals.
- */
-export function formatSol(lamports: number): string {
-  const sol = lamports / 1_000_000_000;
-  return formatNumber(sol, 4);
 }

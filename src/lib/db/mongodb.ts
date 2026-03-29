@@ -25,8 +25,8 @@ export async function getDatabase(): Promise<Db | null> {
   try {
     client = new MongoClient(MONGODB_URI);
     await client.connect();
-    db = client.db("veritas");
-    console.log("[MongoDB] 🐘 Elephant Memory connected");
+    db = client.db("assetproof");
+    console.log("[MongoDB] Connected");
     return db;
   } catch (error) {
     console.error("[MongoDB] Connection failed:", error);

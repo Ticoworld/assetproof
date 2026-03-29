@@ -65,35 +65,26 @@ interface UseScannerReturn {
 }
 
 /**
- * Validates a Solana address (base58, 32-44 chars)
+ * Validates a BNB Chain / EVM address (0x-prefixed, 40 hex chars)
  */
-function isValidSolanaAddress(address: string): boolean {
-  const base58Regex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-  return base58Regex.test(address);
+function isValidEvmAddress(address: string): boolean {
+  return /^0x[0-9a-fA-F]{40}$/.test(address);
 }
 
 /**
- * Extracts token address from various input formats
+ * Extracts a contract address from raw input or a DexScreener/BSCScan URL
  */
 function extractAddress(input: string): string {
   const cleaned = input.trim();
-  
-  // Check for Solscan URL
-  const solscanMatch = cleaned.match(/solscan\.io\/(?:token|account)\/([1-9A-HJ-NP-Za-km-z]{32,44})/);
-  if (solscanMatch) return solscanMatch[1];
-  
-  // Check for Birdeye URL
-  const birdeyeMatch = cleaned.match(/birdeye\.so\/token\/([1-9A-HJ-NP-Za-km-z]{32,44})/);
-  if (birdeyeMatch) return birdeyeMatch[1];
-  
-  // Check for DexScreener URL
-  const dexMatch = cleaned.match(/dexscreener\.com\/solana\/([1-9A-HJ-NP-Za-km-z]{32,44})/);
+
+  // DexScreener BSC URL: dexscreener.com/bsc/0x...
+  const dexMatch = cleaned.match(/dexscreener\.com\/bsc\/(0x[0-9a-fA-F]{40})/);
   if (dexMatch) return dexMatch[1];
 
-  // Check for Pump.fun URL
-  const pumpMatch = cleaned.match(/pump\.fun\/(?:coin\/)?([1-9A-HJ-NP-Za-km-z]{32,44})/);
-  if (pumpMatch) return pumpMatch[1];
-  
+  // BSCScan token/address URL
+  const bscscanMatch = cleaned.match(/bscscan\.com\/(?:token|address)\/(0x[0-9a-fA-F]{40})/);
+  if (bscscanMatch) return bscscanMatch[1];
+
   return cleaned;
 }
 
@@ -101,7 +92,7 @@ export function useScanner(): UseScannerReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<UnifiedScanResult | null>(null);
-  const { addScan } = useScanHistory();
+  const { addItem } = useScanHistory();
 
   const scanToken = useCallback(async (input: string) => {
     // Reset previous state
@@ -111,13 +102,13 @@ export function useScanner(): UseScannerReturn {
     // Extract and validate address
     const address = extractAddress(input);
 
-    if (!isValidSolanaAddress(address)) {
-      setError("Invalid Solana address. Please enter a valid token contract address or URL.");
+    if (!isValidEvmAddress(address)) {
+      setError("Invalid address. Please enter a valid BNB Chain contract address (0x…) or URL.");
       return;
     }
 
     setLoading(true);
-    console.log("[Veritas] 🚀 Starting unified analysis...");
+    console.log("[AssetProof] Starting analysis for", address);
 
     try {
       // ═══════════════════════════════════════════════════════════════════════
@@ -139,33 +130,19 @@ export function useScanner(): UseScannerReturn {
 
       const scanResult: UnifiedScanResult = data.data;
       
-      console.log(`[Veritas] ✅ Analysis complete: ${scanResult.verdict} (Trust: ${scanResult.trustScore})`);
-      console.log(`[Veritas] 👤 Criminal Profile: ${scanResult.criminalProfile}`);
+      console.log("[AssetProof] Analysis complete:", scanResult.verdict, "trust:", scanResult.trustScore);
 
       setResult(scanResult);
-      
-      // Add to history (adapt format for history)
-      addScan({
-        tokenAddress: scanResult.tokenAddress,
-        tokenData: {
-          address: scanResult.tokenAddress,
-          name: scanResult.tokenName,
-          symbol: scanResult.tokenSymbol,
-          decimals: 9,
-          totalSupply: 0,
-          creatorAddress: "",
-          createdAt: new Date(),
-        },
-        overallRiskLevel: scanResult.verdict === "Safe" ? "low" : scanResult.verdict === "Danger" ? "critical" : "medium",
+
+      addItem({
+        assetAddress: scanResult.tokenAddress,
+        assetName: scanResult.tokenName,
+        assetSymbol: scanResult.tokenSymbol,
+        verdict: scanResult.verdict === "Safe" ? "Pass" : scanResult.verdict === "Danger" ? "Fail" : "Review",
         riskScore: 100 - scanResult.trustScore,
-        auditedAt: new Date(scanResult.analyzedAt),
-        recommendations: [scanResult.summary, ...scanResult.evidence],
-        bondingCurve: { isComplete: true, progress: 100, virtualSolReserves: 0, virtualTokenReserves: 0, realSolReserves: 0, realTokenReserves: 0 },
-        creatorAnalysis: { address: "", totalTokensCreated: 0, rugPullCount: 0, successfulTokens: 0, avgHoldTime: 0, totalSolExtracted: 0, firstActivityDate: new Date(), riskScore: 0 },
-        creatorStatus: { creatorAddress: "", creatorPercentage: scanResult.onChain.creatorPercentage, creatorBalance: 0, isDumped: scanResult.onChain.isDumped, isWhale: scanResult.onChain.isWhale },
-        riskFactors: [],
+        searchedAt: new Date().toISOString(),
       });
-      
+
       setLoading(false);
 
     } catch (err) {
@@ -173,9 +150,7 @@ export function useScanner(): UseScannerReturn {
       
       // Provide more helpful error messages
       if (message.includes("not found") || message.includes("not exist")) {
-        setError("Token not found. This address may not exist on-chain.");
-      } else if (message.includes("not a valid SPL Token") || message.includes("not a standard SPL")) {
-        setError("Not a valid Token. This appears to be a wallet or program address, not a token mint.");
+        setError("Asset not found. This address may not exist on BNB Chain.");
       } else if (message.includes("fetch") || message.includes("network")) {
         setError("Network error. Please check your connection and try again.");
       } else {
@@ -183,7 +158,7 @@ export function useScanner(): UseScannerReturn {
       }
       setLoading(false);
     }
-  }, [addScan]);
+  }, [addItem]);
 
   const reset = useCallback(() => {
     setLoading(false);

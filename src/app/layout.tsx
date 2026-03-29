@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Veritas | AI Crypto Scam Detection",
-  description: "AI-powered forensic analysis for Solana tokens. Detect rug pulls, serial scammers, and fake projects using Gemini 3 multimodal vision.",
-  keywords: ["solana", "web3", "rug pull", "crypto", "scanner", "anti-scam", "gemini", "ai"],
+  title: "AssetProof | RWA Attestation Monitor",
+  description: "On-chain attestation and disclosure monitoring for real-world assets on BNB Chain.",
+  keywords: ["rwa", "real world assets", "bnb chain", "attestation", "disclosure", "web3", "defi"],
   icons: {
     icon: "/images/logo.png",
     apple: "/images/logo.png",
