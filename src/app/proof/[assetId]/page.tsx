@@ -5,6 +5,7 @@ import { AssetOverviewCard } from "@/components/proof/AssetOverviewCard";
 import { AttestationStatusCard } from "@/components/proof/AttestationStatusCard";
 import { DisclosureTable } from "@/components/proof/DisclosureTable";
 import { TrustSummaryPanel } from "@/components/proof/TrustSummaryPanel";
+import { PublishPanel } from "@/components/proof/PublishPanel";
 
 interface Props {
   params: Promise<{ assetId: string }>;
@@ -62,6 +63,9 @@ export default async function ProofPage({ params }: Props) {
 
         {/* Disclosure documents - full width */}
         <DisclosureTable documents={record.documents} />
+
+        {/* Publish panel */}
+        <PublishPanel record={record} />
       </div>
     </div>
   );

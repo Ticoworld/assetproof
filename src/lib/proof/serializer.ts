@@ -55,7 +55,7 @@ export interface ProofPayload {
 export interface PublishResult {
   success: boolean;
   /** The mode that was actually used (may differ from requested if fallback occurred). */
-  mode: "dry-run" | "bsc-testnet";
+  mode: "dry-run" | "relay" | "bas-direct-placeholder";
   /** SHA-256 digest of the canonical payload JSON. Format: "sha256:<hex>" */
   payloadHash: string;
   /** The exact payload that was (or would be) published. */

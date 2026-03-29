@@ -33,6 +33,10 @@
  *
  * This design lets BAS, a custom proof registry, or any attestation relay slot in
  * without changing the product model — only the endpoint URL needs to change.
+ *
+ * bas-direct-placeholder — Slot reserved for BAS SDK direct integration.
+ * Not yet active. Returns a hashed result with a note. Set PROOF_PUBLISHER_NETWORK=bas-direct
+ * to activate. Falls back to relay if an endpoint is also configured, else dry-run.
  */
 
 import { createHash } from "node:crypto";
@@ -41,7 +45,7 @@ import type { PublishResult } from "./serializer";
 import { serializeProofRecord } from "./serializer";
 import { BSC_TESTNET } from "./chains";
 
-export type PublishMode = "dry-run" | "bsc-testnet";
+export type PublishMode = "dry-run" | "relay" | "bas-direct-placeholder";
 
 export interface PublishConfig {
   mode: PublishMode;
@@ -52,14 +56,28 @@ export interface PublishConfig {
 /**
  * Derives publish config from environment variables.
  * Falls back to dry-run if required env vars are absent or incomplete.
+ *
+ * PROOF_PUBLISHER_NETWORK values:
+ *   relay          — POST to PROOF_PUBLISHER_ENDPOINT (requires endpoint to be set)
+ *   bsc-testnet    — legacy alias for relay, accepted for backward compatibility
+ *   bas-direct     — BAS SDK slot (placeholder; not yet active)
+ *   <anything else or absent> — dry-run
  */
 export function resolvePublishConfig(): PublishConfig {
-  const networkEnv = process.env.PROOF_PUBLISHER_NETWORK?.trim();
+  const networkEnv = process.env.PROOF_PUBLISHER_NETWORK?.trim().toLowerCase();
   const endpoint = process.env.PROOF_PUBLISHER_ENDPOINT?.trim() || undefined;
   const apiKey = process.env.PROOF_PUBLISHER_API_KEY?.trim() || undefined;
 
-  if (networkEnv === "bsc-testnet" && endpoint) {
-    return { mode: "bsc-testnet", endpoint, apiKey };
+  // relay mode: accept both current name and legacy alias
+  if ((networkEnv === "relay" || networkEnv === "bsc-testnet") && endpoint) {
+    return { mode: "relay", endpoint, apiKey };
+  }
+
+  // BAS direct — placeholder; not yet active
+  if (networkEnv === "bas-direct") {
+    // If a relay endpoint is also provided, use relay as the active path
+    if (endpoint) return { mode: "relay", endpoint, apiKey };
+    return { mode: "bas-direct-placeholder" };
   }
 
   return { mode: "dry-run" };
@@ -91,11 +109,26 @@ export async function publishProofRecord(record: ProofRecord): Promise<PublishRe
       publishedAt,
       chainStatus,
       dryRunNote:
-        "Set PROOF_PUBLISHER_NETWORK=bsc-testnet and PROOF_PUBLISHER_ENDPOINT to publish on-chain.",
+        "Set PROOF_PUBLISHER_NETWORK=relay and PROOF_PUBLISHER_ENDPOINT to publish via relay, or configure BAS direct once available.",
     };
   }
 
-  // bsc-testnet — POST to configured relay
+  // bas-direct-placeholder — reserved slot, not yet active
+  if (config.mode === "bas-direct-placeholder") {
+    return {
+      success: true,
+      mode: "bas-direct-placeholder",
+      payloadHash,
+      payload,
+      publishedAt,
+      chainStatus,
+      dryRunNote:
+        "BAS direct publish is not yet active. Payload has been hashed and validated. " +
+        "Configure PROOF_PUBLISHER_ENDPOINT to publish via relay, or wait for BAS SDK integration.",
+    };
+  }
+
+  // relay — POST the serialized payload to the configured endpoint
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15_000);
@@ -109,7 +142,7 @@ export async function publishProofRecord(record: ProofRecord): Promise<PublishRe
           ...(config.apiKey ? { Authorization: `Bearer ${config.apiKey}` } : {}),
         },
         body: JSON.stringify({
-          network: "bsc-testnet",
+          network: "bsc-testnet", // kept for relay contract compatibility
           chainId: BSC_TESTNET.chainId,
           payloadHash,
           payload,
@@ -144,7 +177,7 @@ export async function publishProofRecord(record: ProofRecord): Promise<PublishRe
 
     return {
       success: true,
-      mode: "bsc-testnet",
+      mode: "relay",
       payloadHash,
       payload,
       txHash,
@@ -156,7 +189,7 @@ export async function publishProofRecord(record: ProofRecord): Promise<PublishRe
   } catch (err) {
     return {
       success: false,
-      mode: "bsc-testnet",
+      mode: "relay",
       payloadHash,
       payload,
       publishedAt,
