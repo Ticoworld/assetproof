@@ -1,0 +1,99 @@
+import type { MockDisclosure, AttestationStatus } from "@/lib/mock/assets";
+
+const DOC_TYPE_LABELS: Record<string, string> = {
+  prospectus: "Prospectus",
+  audit: "Audit",
+  valuation: "Valuation",
+  legal: "Legal",
+  custody: "Custody",
+};
+
+const STATUS_CONFIG: Record<
+  AttestationStatus,
+  { label: string; className: string }
+> = {
+  verified: { label: "Verified", className: "text-emerald-400 bg-emerald-950/50 border-emerald-900" },
+  stale: { label: "Stale", className: "text-amber-400 bg-amber-950/50 border-amber-900" },
+  missing: { label: "Missing", className: "text-rose-400 bg-rose-950/50 border-rose-900" },
+};
+
+interface Props {
+  disclosures: MockDisclosure[];
+}
+
+export function DisclosureTable({ disclosures }: Props) {
+  return (
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+      <div className="px-6 py-4 border-b border-zinc-800">
+        <h3 className="text-zinc-300 font-semibold text-sm">Disclosure Documents</h3>
+        <p className="text-zinc-600 text-xs font-mono mt-0.5">
+          {disclosures.filter((d) => d.status === "verified").length} of {disclosures.length} verified
+        </p>
+      </div>
+
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-zinc-800">
+            <th className="text-left px-6 py-3 text-zinc-600 font-mono text-xs uppercase tracking-widest">
+              Document
+            </th>
+            <th className="text-left px-4 py-3 text-zinc-600 font-mono text-xs uppercase tracking-widest">
+              Type
+            </th>
+            <th className="text-left px-4 py-3 text-zinc-600 font-mono text-xs uppercase tracking-widest">
+              Published
+            </th>
+            <th className="text-left px-4 py-3 text-zinc-600 font-mono text-xs uppercase tracking-widest">
+              Status
+            </th>
+            <th className="text-right px-6 py-3 text-zinc-600 font-mono text-xs uppercase tracking-widest">
+              Link
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {disclosures.map((doc, i) => {
+            const statusCfg = STATUS_CONFIG[doc.status];
+            return (
+              <tr
+                key={doc.id}
+                className={`border-b border-zinc-800/50 ${i % 2 === 0 ? "" : "bg-zinc-800/20"}`}
+              >
+                <td className="px-6 py-3 text-zinc-200">{doc.title}</td>
+                <td className="px-4 py-3">
+                  <span className="text-zinc-500 font-mono text-xs">
+                    {DOC_TYPE_LABELS[doc.docType] ?? doc.docType}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-zinc-500 font-mono text-xs">
+                  {doc.publishedAt || <span className="text-zinc-700">-</span>}
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-md border text-xs font-mono ${statusCfg.className}`}
+                  >
+                    {statusCfg.label}
+                  </span>
+                </td>
+                <td className="px-6 py-3 text-right">
+                  {doc.url ? (
+                    <a
+                      href={doc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-zinc-500 font-mono text-xs hover:text-zinc-300 underline underline-offset-2 transition-colors"
+                    >
+                      View
+                    </a>
+                  ) : (
+                    <span className="text-zinc-700 font-mono text-xs">-</span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
