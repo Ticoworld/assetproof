@@ -17,8 +17,8 @@ export const metadata: Metadata = {
   description: "On-chain attestation and disclosure monitoring for real-world assets on BNB Chain.",
   keywords: ["rwa", "real world assets", "bnb chain", "attestation", "disclosure", "web3", "defi"],
   icons: {
-    icon: "/images/logo.png",
-    apple: "/images/logo.png",
+    icon: "/logo.png",
+    apple: "/logo.png",
   },
 };
 
