@@ -1,60 +1,67 @@
 # AssetProof
 
-> **Trust requires ongoing proof. Not just tokenization.**
+> Trust requires ongoing proof. Not just tokenization.
 
-AssetProof acts as the ongoing trust layer for tokenized assets on BNB Chain, continually auditing whether critical disclosures are current, expiring, stale, or missing.
+AssetProof is a disclosure trust layer for tokenized assets on BNB Chain. It checks whether key disclosures such as custody, valuation, legal, and regulatory records are current, expiring, stale, or missing, then generates a publishable trust receipt.
 
-## 🎯 The Problem
+## What problem it solves
 
-Tokenizing an asset is easy. Trusting it over time is hard. Currently, "RWA platforms" mint a token and drop a static PDF into a decentralized storage link. Six months later, the underlying custody statement expires, the valuation goes stale, or the legal standing changes—but the token keeps trading. Investors are left completely blind to the deterioration of the asset's structural integrity.
+A tokenized asset can still keep trading even when the real-world disclosures behind it have gone stale or disappeared.
 
-## ✨ The Solution
+AssetProof is built to answer one question clearly:
 
-AssetProof shifts the focus from initial tokenization to continuous disclosure auditing. It ingests the canonical documents that make an asset real (Custody, Valuation, Legal, and Regulatory filings), checks their issuance and expiration dates, and evaluates them deterministically. If a custody report is stale or a valuation is missing, the asset is flagged immediately. 
+**Is this asset still trustworthy today?**
 
-## 🏗️ How It Works
+## What it does
 
-1. **Issuer Registration**: Asset issuers submit URLs and validity windows for their mandatory disclosures.
-2. **Deterministic Evaluation**: AssetProof analyzes the freshness of the signals. Are they current, expiring (within 30 days), stale, or entirely missing?
-3. **Trust State Calculation**: The system derives a plain-English state (e.g., "Review because the custody disclosure expires in 3 days").
-4. **On-Chain Attestation**: The platform canonicalizes the proof record, hashes it, and publishes a cryptographic receipt directly to BNB Chain via BAS (BNB Attestation Service). 
-5. **Public Verification**: Anyone can paste a BAS attestation UID into the Verify portal to instantly reconstruct the exact trust state and disclosure freshness at the time of publishing.
+AssetProof:
 
-## 📊 What is Actually Verified
+- collects disclosure inputs for a tokenized asset
+- evaluates disclosure freshness using deterministic rules
+- derives a trust state: Healthy, Review, or At Risk
+- performs lightweight link credibility checks on disclosure URLs
+- generates a canonical proof record
+- supports publishing a trust receipt through BAS on BNB Chain
+- supports public verification through a verify flow
 
-- **Document Freshness**: We strictly verify the lifecycle (Issue Date & Expiration Date) of provided disclosures against the current date.
-- **Signal Completeness**: We mathematically track which mandatory documents (Custody, Valuation, Legal) are present vs. missing.
-- **Attester Immutability**: We verify that the exact trust payload presented in the UI precisely matches the cryptographic signature of the BAS receipt.
+## What is currently verified
 
-## 🛠️ Tech Stack & Integration
+- disclosure freshness from issue and expiry dates
+- completeness of required disclosure signals
+- attestation payload integrity against the BAS receipt
+- basic link credibility signals such as reachability and content-type hints
 
-- **Frontend:** Next.js 16 (App Router), React, Tailwind CSS
-- **Attestation:** BNB Attestation Service (BAS), `@ethereum-attestation-service/eas-sdk`, Ethers.js
-- **Network:** BNB Smart Chain (Testnet/Mainnet)
+## What is not verified yet
 
-Rather than deploying bulky smart contracts just to store metadata, we use BAS to decouple the attestation of trust from the token standard itself. This makes our checks incredibly cheap, standard-compliant, and fully composable with the broader BNB ecosystem. 
+- document contents or legal truthfulness
+- issuer identity beyond submitted inputs
+- live on-chain token supply versus off-chain asset value
+- automated recurring monitoring
 
-## 🚀 Getting Started
+## How it works
+
+1. An issuer submits disclosure inputs
+2. AssetProof evaluates each signal as current, expiring, stale, or missing
+3. The app derives an overall trust state
+4. A proof record is canonicalized and hashed
+5. The proof can be published as an attested receipt on BNB Chain
+6. The published proof can be reopened through the verify flow
+
+## Tech stack
+
+- Next.js 16
+- React
+- TypeScript
+- Tailwind CSS
+- Ethers.js
+- EAS SDK
+- BNB Chain / BAS
+
+## Getting started
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/assetproof.git
+git clone https://github.com/Ticoworld/assetproof.git
 cd assetproof
-
-# Install dependencies
 npm install
-
-# Setup environment variables (using BAS direct or relay mode)
 cp .env.local.example .env.local
-
-# Run the development server
 npm run dev
-
-# Open http://localhost:3000 to view the application
-```
-
-## 🏆 Hackathon
-Built for the **BNB Chain Hackathon** (Q1 2026).
-
-## 📄 License
-MIT
