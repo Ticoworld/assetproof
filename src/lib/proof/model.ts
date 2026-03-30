@@ -36,6 +36,16 @@ export interface ProofSignal {
   status: ProofStatus;
 }
 
+/** Lightweight verification status of a document link. */
+export interface LinkCredibility {
+  reachable: boolean;
+  protocol: "https" | "http" | "other";
+  status?: number;
+  contentType?: string;
+  fileHint?: string; // e.g., "pdf", "html"
+  checkedAt: string; // ISO timestamp
+}
+
 /** One disclosed document linked to a signal. */
 export interface ProofDocument {
   id: string;
@@ -44,11 +54,13 @@ export interface ProofDocument {
   url: string;
   publishedAt: string; // YYYY-MM-DD
   status: ProofStatus;
+  credibility?: LinkCredibility;
 }
 
 /** Aggregated trust summary across all disclosure signals. */
 export interface ProofSummary {
   trust: TrustState;
+  explanation: string;
   verifiedCount: number;
   expiringCount: number;
   staleCount: number;

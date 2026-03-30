@@ -37,7 +37,7 @@ export function TrustSummaryPanel({ record }: Props) {
           <div className="flex items-center gap-3">
             <span className="font-black font-mono text-xl tracking-widest">{config.label}</span>
           </div>
-          <p className="text-sm opacity-80">{config.description}</p>
+          <p className="text-sm opacity-80">{record.summary.explanation || config.description}</p>
         </div>
 
         {/* Pre-computed signal counts from summary */}

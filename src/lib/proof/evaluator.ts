@@ -17,6 +17,7 @@ import type {
   TrustState,
   SignalKey,
   AssetCategory,
+  LinkCredibility,
 } from "./model";
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
@@ -28,6 +29,7 @@ export interface SignalInput {
   expiryDate: string; // YYYY-MM-DD, empty string if no expiry clause
   attester: string;   // entity that issued or attests the document
   docTitle: string;   // human-readable document title
+  credibility?: LinkCredibility;
 }
 
 /** Raw inputs required to build a ProofRecord. */
@@ -93,6 +95,44 @@ export function deriveTrustState(statuses: ProofStatus[]): TrustState {
   return "Healthy";
 }
 
+/**
+ * Derives a plain-English explanation for the current trust state.
+ */
+export function deriveExplanation(signals: ProofSignal[], trust: TrustState, asOfMs: number): string {
+  if (trust === "Healthy") {
+    return "Healthy because all required disclosures are current.";
+  }
+
+  if (trust === "Review") {
+    const expiring = signals.filter((s) => s.status === "expiring");
+    if (expiring.length > 0) {
+      const s = expiring[0];
+      const expiry = new Date(s.expiresAt).getTime();
+      const days = Math.ceil((expiry - asOfMs) / (1000 * 60 * 60 * 24));
+      return `Review because the ${s.label.toLowerCase()} disclosure expires in ${days} day${days === 1 ? '' : 's'}.`;
+    }
+    return "Review because one or more disclosures are expiring soon.";
+  }
+
+  // At Risk
+  const stale = signals.filter((s) => s.status === "stale");
+  const missing = signals.filter((s) => s.status === "missing");
+  
+  const parts = [];
+  if (stale.length > 0) {
+    parts.push(`one ${stale[0].label.toLowerCase()} filing is stale`);
+  }
+  if (missing.length > 0) {
+    parts.push(`one ${missing[0].label.toLowerCase()} filing is missing`);
+  }
+  
+  if (parts.length > 0) {
+    return `At Risk because ${parts.join(" and ")}.`;
+  }
+  
+  return "At Risk because key disclosures are missing or overdue.";
+}
+
 const SIGNAL_META: { key: SignalKey; label: string; required: boolean }[] = [
   { key: "custody", label: "Custody", required: true },
   { key: "valuation", label: "Valuation", required: true },
@@ -136,14 +176,17 @@ export function buildProofRecord(
       url: raw.url,
       publishedAt: raw.issuedDate,
       status: signals[i].status,
+      credibility: raw.credibility,
     };
   });
 
   const statuses = signals.map((s) => s.status);
   const trust = deriveTrustState(statuses);
+  const explanation = deriveExplanation(signals, trust, evaluationDate.getTime());
 
   const summary: ProofSummary = {
     trust,
+    explanation,
     verifiedCount: statuses.filter((s) => s === "verified").length,
     expiringCount: statuses.filter((s) => s === "expiring").length,
     staleCount: statuses.filter((s) => s === "stale").length,

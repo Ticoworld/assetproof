@@ -19,6 +19,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { ProofRecord } from "@/lib/proof/model";
 import type { PublishResult, VerificationResult } from "@/lib/proof/serializer";
+import { storeReceiptByUid } from "@/lib/receipt/store";
 
 type PublishPhase = "idle" | "publishing" | "done" | "error";
 
@@ -72,6 +73,12 @@ export function PublishPanel({
         setError(data.error ?? "Publish failed.");
       } else if (typeof window !== "undefined") {
         sessionStorage.setItem(`assetproof:receipt:${record.id}`, JSON.stringify(data));
+        // Also persist to localStorage by UID so /verify can access it from a shared link.
+        if (data.basAttestation?.uid) {
+          storeReceiptByUid(data.basAttestation.uid, data);
+        } else if (data.attestationId) {
+          storeReceiptByUid(data.attestationId, data);
+        }
       }
     } catch (err) {
       setPhase("error");
@@ -175,6 +182,38 @@ export function PublishPanel({
           {/* Verification receipt */}
           {result.verification && (
             <VerificationBadge verification={result.verification} />
+          )}
+
+          {/* Proof-sharing actions */}
+          {result.basAttestation?.uid && (
+            <div className="flex flex-wrap items-center gap-3 pt-1 border-t border-zinc-800">
+              <Link
+                href={`/verify?uid=${result.basAttestation.uid}`}
+                className="inline-flex items-center gap-1.5 text-xs font-mono text-zinc-300 hover:text-zinc-100 transition-colors"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                Verify this proof →
+              </Link>
+              <a
+                href={`https://testnet.bascan.io/attestation/${result.basAttestation.uid}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-mono text-zinc-600 hover:text-zinc-400 transition-colors"
+              >
+                View on BAS explorer ↗
+              </a>
+              <span className="text-zinc-800">•</span>
+              <button
+                onClick={() => {
+                  if (result.basAttestation?.uid) {
+                    navigator.clipboard.writeText(`${window.location.origin}/verify?uid=${result.basAttestation.uid}`);
+                  }
+                }}
+                className="text-xs font-mono text-zinc-500 hover:text-zinc-300 transition-colors"
+              >
+                Copy share link
+              </button>
+            </div>
           )}
 
           <button

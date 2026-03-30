@@ -18,14 +18,13 @@ export default function Home() {
       <main className="max-w-5xl mx-auto px-8 pt-24 pb-16">
         <div className="max-w-2xl">
           <p className="text-zinc-500 font-mono text-xs uppercase tracking-widest mb-4">
-            BNB Chain &bull; Real-World Assets
+            BNB Chain &bull; Disclosure Attestations
           </p>
           <h1 className="text-4xl font-bold text-zinc-100 leading-tight mb-6">
-            Track disclosure freshness<br />for tokenized assets.
+            Trust requires ongoing proof.<br />Not just tokenization.
           </h1>
           <p className="text-zinc-400 text-base leading-relaxed mb-10 max-w-lg">
-            AssetProof checks whether custody, valuation, and legal documents
-            are verified, expiring, or missing for RWA issuances on BNB Chain.
+            AssetProof checks whether custody, valuation, and legal disclosures are current, expiring, stale, or missing, then publishes an attested trust receipt on BNB Chain.
           </p>
           <div className="flex items-center gap-4">
             <Link

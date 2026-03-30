@@ -39,6 +39,7 @@ export interface ProofPayload {
     expiring: number;
     stale: number;
     missing: number;
+    explanation: string;
   };
   /** Per-signal freshness status and document references. */
   signals: Array<{
@@ -155,6 +156,7 @@ export function serializeProofRecord(record: ProofRecord): {
       expiring: record.summary.expiringCount,
       stale: record.summary.staleCount,
       missing: record.summary.missingCount,
+      explanation: record.summary.explanation,
     },
     signals: record.signals.map((s) => ({
       key: s.key,

@@ -1,4 +1,5 @@
 import type { ProofDocument, ProofStatus, SignalKey } from "@/lib/proof/model";
+import { Check, AlertCircle } from "lucide-react";
 
 const SIGNAL_LABELS: Record<SignalKey, string> = {
   custody: "Custody",
@@ -64,14 +65,34 @@ export function DisclosureTable({ documents }: Props) {
                 </td>
                 <td className="px-6 py-3 text-right">
                   {doc.url ? (
-                    <a
-                      href={doc.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-zinc-500 font-mono text-xs hover:text-zinc-300 underline underline-offset-2 transition-colors"
-                    >
-                      View
-                    </a>
+                    <div className="flex flex-col items-end gap-1">
+                      <a
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-zinc-400 font-mono text-xs hover:text-zinc-200 transition-colors"
+                      >
+                        View ↗
+                      </a>
+                      {doc.credibility && (
+                        <div>
+                          {doc.credibility.reachable ? (
+                            <span className="text-emerald-500/80 text-[10px] font-mono flex items-center gap-1">
+                              <Check className="w-2.5 h-2.5" />
+                              Reachable
+                              {doc.credibility.fileHint && ` (${doc.credibility.fileHint.toUpperCase()})`}
+                            </span>
+                          ) : (
+                            <span className="text-amber-500/80 text-[10px] font-mono flex items-center gap-1">
+                              <AlertCircle className="w-2.5 h-2.5" />
+                              {doc.credibility.protocol === "http" || doc.credibility.protocol === "other"
+                                ? "Unsecure protocol"
+                                : "Unreachable"}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <span className="text-zinc-700 font-mono text-xs">-</span>
                   )}

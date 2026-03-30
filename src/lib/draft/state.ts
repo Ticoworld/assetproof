@@ -8,7 +8,7 @@
  * cleared when the browser tab closes.
  */
 
-import type { ProofRecord, AssetCategory } from "@/lib/proof/model";
+import type { ProofRecord, AssetCategory, LinkCredibility } from "@/lib/proof/model";
 import { buildProofRecord } from "@/lib/proof/evaluator";
 
 const DRAFT_KEY = "assetproof_draft";
@@ -18,6 +18,7 @@ export interface ProofInput {
   url: string;        // publicly accessible document URL
   issuedDate: string; // YYYY-MM-DD
   expiryDate: string; // YYYY-MM-DD — leave blank if no expiry clause
+  credibility?: LinkCredibility; // result of server-side link check
 }
 
 /** Complete issuer form state (raw, pre-evaluation). */
@@ -63,6 +64,7 @@ export function buildDraftProof(form: IssuerFormData): ProofRecord {
       expiryDate: form.custody.expiryDate,
       attester: form.custodyProvider || "Custodian",
       docTitle: "Custody statement",
+      credibility: form.custody.credibility,
     },
     valuation: {
       url: form.valuation.url,
@@ -70,6 +72,7 @@ export function buildDraftProof(form: IssuerFormData): ProofRecord {
       expiryDate: form.valuation.expiryDate,
       attester: "Independent appraiser",
       docTitle: "Valuation report",
+      credibility: form.valuation.credibility,
     },
     legal: {
       url: form.legal.url,
@@ -77,6 +80,7 @@ export function buildDraftProof(form: IssuerFormData): ProofRecord {
       expiryDate: form.legal.expiryDate,
       attester: form.jurisdiction ? `${form.jurisdiction} counsel` : "Legal counsel",
       docTitle: "Legal filing",
+      credibility: form.legal.credibility,
     },
     regulatory: {
       url: form.regulatory.url,
@@ -84,6 +88,7 @@ export function buildDraftProof(form: IssuerFormData): ProofRecord {
       expiryDate: form.regulatory.expiryDate,
       attester: form.jurisdiction ? `${form.jurisdiction} regulator` : "Regulator",
       docTitle: "Regulatory filing",
+      credibility: form.regulatory.credibility,
     },
   });
   // No asOf passed — evaluates against today so the preview reflects current freshness.
