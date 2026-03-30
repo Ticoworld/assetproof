@@ -51,6 +51,35 @@ export interface ProofPayload {
   }>;
 }
 
+// ── Verification types ────────────────────────────────────────────────────────
+
+/**
+ * Overall verification status for a publish receipt.
+ * - verified:        all critical checks passed (signature + uid derivation)
+ * - partial:         some but not all checks passed
+ * - unverified:      signature check failed
+ * - not-applicable:  mode does not produce a verifiable attestation (dry-run, relay)
+ */
+export type VerificationStatus = "verified" | "partial" | "unverified" | "not-applicable";
+
+export interface VerificationCheck {
+  /** Short machine-readable check name. */
+  name: string;
+  passed: boolean;
+  /** Human-readable note, present only if the check failed or needs context. */
+  note?: string;
+}
+
+export interface VerificationResult {
+  status: VerificationStatus;
+  checks: VerificationCheck[];
+  verifiedAt: string;
+  /** Present for not-applicable mode — explains why verification was skipped. */
+  note?: string;
+}
+
+// ── Publish result ─────────────────────────────────────────────────────────────
+
 /** Result returned from the publish pipeline to the client. */
 export interface PublishResult {
   success: boolean;
@@ -92,6 +121,8 @@ export interface PublishResult {
   };
   /** Present when mode is dry-run — explains what to configure for live publish. */
   dryRunNote?: string;
+  /** Structured verification result — present after bas-direct, absent for dry-run / relay. */
+  verification?: VerificationResult;
   error?: string;
 }
 

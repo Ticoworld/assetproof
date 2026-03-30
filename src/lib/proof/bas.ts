@@ -25,6 +25,7 @@ import {
   Offchain,
   OffchainAttestationVersion,
 } from "@ethereum-attestation-service/eas-sdk";
+import type { SignedOffchainAttestation } from "@ethereum-attestation-service/eas-sdk";
 import { Wallet, Signature } from "ethers";
 import type { ProofPayload } from "./serializer";
 
@@ -56,8 +57,8 @@ export const BAS_SCHEMA =
  * These serve as fallbacks if BAS_CONTRACT_ADDRESS is not set.
  */
 const BAS_CONTRACT_DEFAULTS: Record<number, string> = {
-  56: "0x6c2270298b1e6046898a322acBC5b1f9b4d16e80", // BSC mainnet
-  97: "0x6c2270298b1e6046898a322acBC5b1f9b4d16e80", // BSC testnet
+  56: "0x6c2270298B1E6046898a322acBc5b1f9B4D16e80", // BSC mainnet
+  97: "0x6c2270298B1E6046898a322acBc5b1f9B4D16e80", // BSC testnet
 };
 
 /**
@@ -119,6 +120,22 @@ export interface BasAttestationResult {
   time: number;
 }
 
+/**
+ * Full signing output — contains attestation result (for the client response)
+ * plus raw internal objects needed for server-side verification.
+ * Never serialize this to the client directly.
+ */
+export interface BasSigningOutput {
+  /** Shaped result for PublishResult.basAttestation. */
+  attestation: BasAttestationResult;
+  /** Full EIP-712 signed object from the EAS SDK — needed for signature verification. */
+  signed: SignedOffchainAttestation;
+  /** ABI-encoded schema data as produced by SchemaEncoder — needed for encoding check. */
+  encodedData: string;
+  /** BasConfig used during signing — needed to re-create Offchain in verify.ts. */
+  config: BasConfig;
+}
+
 // ── Off-chain signing ─────────────────────────────────────────────────────────
 
 /**
@@ -128,6 +145,9 @@ export interface BasAttestationResult {
  * - No RPC connection is required.
  * - The attestation is fully verifiable using the signerAddress and signature.
  *
+ * Returns BasSigningOutput which includes both the client-facing BasAttestationResult
+ * and the raw SignedOffchainAttestation needed for server-side verification.
+ *
  * Throws on invalid private key or encoding failure.
  * Wrap all calls in try/catch (done in publisher.ts).
  */
@@ -135,7 +155,7 @@ export async function createBasOffchainAttestation(
   payload: ProofPayload,
   payloadHash: string,
   config: BasConfig,
-): Promise<BasAttestationResult> {
+): Promise<BasSigningOutput> {
   // Encode the schema fields from the ProofPayload.
   const encoder = new SchemaEncoder(BAS_SCHEMA);
   const encodedData = encoder.encodeData([
@@ -198,10 +218,15 @@ export async function createBasOffchainAttestation(
   }).serialized;
 
   return {
-    uid:           signed.uid,
-    schemaUID:     config.schemaUID,
-    signerAddress,
-    signature:     compactSig,
-    time:          Number(time),
+    attestation: {
+      uid:           signed.uid,
+      schemaUID:     config.schemaUID,
+      signerAddress,
+      signature:     compactSig,
+      time:          Number(time),
+    },
+    signed,
+    encodedData,
+    config,
   };
 }

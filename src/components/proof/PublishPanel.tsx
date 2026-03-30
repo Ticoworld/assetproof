@@ -15,10 +15,10 @@
  *   demoHref    — If provided, renders a secondary "View demo" link in idle state.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { ProofRecord } from "@/lib/proof/model";
-import type { PublishResult } from "@/lib/proof/serializer";
+import type { PublishResult, VerificationResult } from "@/lib/proof/serializer";
 
 type PublishPhase = "idle" | "publishing" | "done" | "error";
 
@@ -39,6 +39,21 @@ export function PublishPanel({
   const [result, setResult] = useState<PublishResult | null>(null);
   const [error, setError] = useState<string>("");
 
+  // Restore last publish receipt for this record from sessionStorage on mount.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = sessionStorage.getItem(`assetproof:receipt:${record.id}`);
+    if (!stored) return;
+    try {
+      const data = JSON.parse(stored) as PublishResult;
+      setResult(data);
+      setPhase(data.success ? "done" : "error");
+      if (!data.success) setError(data.error ?? "Publish failed.");
+    } catch {
+      // Corrupt stored data — ignore.
+    }
+  }, [record.id]);
+
   const handlePublish = async () => {
     if (phase === "publishing") return;
     setPhase("publishing");
@@ -53,7 +68,11 @@ export function PublishPanel({
       const data = (await res.json()) as PublishResult;
       setResult(data);
       setPhase(data.success ? "done" : "error");
-      if (!data.success) setError(data.error ?? "Publish failed.");
+      if (!data.success) {
+        setError(data.error ?? "Publish failed.");
+      } else if (typeof window !== "undefined") {
+        sessionStorage.setItem(`assetproof:receipt:${record.id}`, JSON.stringify(data));
+      }
     } catch (err) {
       setPhase("error");
       setError(err instanceof Error ? err.message : "Network error.");
@@ -64,6 +83,9 @@ export function PublishPanel({
     setPhase("idle");
     setResult(null);
     setError("");
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem(`assetproof:receipt:${record.id}`);
+    }
   };
 
   return (
@@ -150,6 +172,11 @@ export function PublishPanel({
             )}
           </div>
 
+          {/* Verification receipt */}
+          {result.verification && (
+            <VerificationBadge verification={result.verification} />
+          )}
+
           <button
             onClick={reset}
             className="text-zinc-600 hover:text-zinc-400 text-xs transition-colors"
@@ -217,6 +244,43 @@ interface ResultRowProps {
   value: string;
   href?: string;
   linkColor?: "emerald" | "zinc";
+}
+
+// ── Verification badge ───────────────────────────────────────────────────────
+
+const VERIFICATION_CONFIG = {
+  verified:         { label: "Locally verified",   textColor: "text-emerald-400", borderColor: "border-emerald-900", bg: "bg-emerald-950/30", icon: "✓" },
+  partial:          { label: "Partially verified",  textColor: "text-amber-400",   borderColor: "border-amber-900",   bg: "bg-amber-950/30",   icon: "△" },
+  unverified:       { label: "Verification failed", textColor: "text-rose-400",    borderColor: "border-rose-900",    bg: "bg-rose-950/30",    icon: "✕" },
+  "not-applicable": { label: "Not applicable",      textColor: "text-zinc-500",    borderColor: "border-zinc-800",    bg: "bg-zinc-900",       icon: "—" },
+} as const;
+
+function VerificationBadge({ verification }: { verification: VerificationResult }) {
+  const { status, checks, note } = verification;
+  const cfg = VERIFICATION_CONFIG[status];
+  const passed = checks.filter((c) => c.passed).length;
+  const total  = checks.length;
+  const failedWithNotes = checks.filter((c) => !c.passed && c.note);
+
+  return (
+    <div className={`rounded-lg border ${cfg.borderColor} ${cfg.bg} px-3 py-2.5 space-y-1.5`}>
+      <div className={`flex items-center gap-1.5 text-xs font-mono ${cfg.textColor}`}>
+        <span>{cfg.icon}</span>
+        <span>{cfg.label}</span>
+        {total > 0 && (
+          <span className="text-zinc-600">&bull; {passed}/{total} checks passed</span>
+        )}
+      </div>
+      {note && total === 0 && (
+        <p className="text-zinc-600 text-xs">{note}</p>
+      )}
+      {failedWithNotes.map((c) => (
+        <p key={c.name} className="text-zinc-600 text-xs leading-snug">
+          {c.name}: {c.note}
+        </p>
+      ))}
+    </div>
+  );
 }
 
 function ResultRow({ label, value, href, linkColor = "zinc" }: ResultRowProps) {

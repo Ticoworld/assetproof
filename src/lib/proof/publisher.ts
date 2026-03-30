@@ -35,6 +35,7 @@ import type { PublishResult } from "./serializer";
 import { serializeProofRecord } from "./serializer";
 import { BSC_TESTNET } from "./chains";
 import { resolveBasConfig, createBasOffchainAttestation } from "./bas";
+import { verifyBasAttestation, notApplicableVerification } from "./verify";
 
 export type PublishMode = "dry-run" | "relay" | "bas-direct";
 
@@ -99,6 +100,7 @@ export async function publishProofRecord(record: ProofRecord): Promise<PublishRe
       payload,
       publishedAt,
       chainStatus,
+      verification: notApplicableVerification("dry-run"),
       dryRunNote:
         "No publish config active. Set PROOF_PUBLISHER_NETWORK=bas-direct with BAS_SCHEMA_UID + BAS_PRIVATE_KEY for off-chain attestation, or PROOF_PUBLISHER_NETWORK=relay with PROOF_PUBLISHER_ENDPOINT to publish via relay.",
     };
@@ -120,16 +122,18 @@ export async function publishProofRecord(record: ProofRecord): Promise<PublishRe
       };
     }
     try {
-      const attestation = await createBasOffchainAttestation(payload, payloadHash, basConfig);
+      const signingOutput = await createBasOffchainAttestation(payload, payloadHash, basConfig);
+      const verification = verifyBasAttestation(signingOutput, payload, payloadHash);
       return {
         success: true,
         mode: "bas-direct",
         payloadHash,
         payload,
-        attestationId: attestation.uid,
+        attestationId: signingOutput.attestation.uid,
         publishedAt,
         chainStatus,
-        basAttestation: attestation,
+        basAttestation: signingOutput.attestation,
+        verification,
       };
     } catch (err) {
       // Surface a clean error without leaking the private key.
@@ -203,6 +207,7 @@ export async function publishProofRecord(record: ProofRecord): Promise<PublishRe
       explorerUrl,
       publishedAt,
       chainStatus,
+      verification: notApplicableVerification("relay"),
     };
   } catch (err) {
     return {
@@ -212,6 +217,7 @@ export async function publishProofRecord(record: ProofRecord): Promise<PublishRe
       payload,
       publishedAt,
       chainStatus,
+      verification: notApplicableVerification("relay"),
       error: err instanceof Error ? err.message : "Publish failed.",
     };
   }
